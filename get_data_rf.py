@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from tqdm import tqdm 
 
 def find_latest_link(url_base):
     try:
@@ -31,7 +32,6 @@ def find_latest_link(url_base):
         return None
 
 def download_dataset_files(url_dataset):
-  
     files_to_download = []
     numbered_prefixes = ['Empresas', 'Estabelecimentos']
 
@@ -64,15 +64,27 @@ def download_dataset_files(url_dataset):
             file_url = urljoin(url_dataset, file_name)
             local_path = os.path.join(main_folder, destination_subfolder, file_name)
             
-            print(f"Downloading '{file_name}' to '{os.path.join(destination_subfolder, file_name)}'...")
+            print(f"\nDownloading '{file_name}' to '{os.path.join(destination_subfolder, file_name)}'...")
             
             try:
                 with requests.get(file_url, stream=True) as r:
                     r.raise_for_status()
+                    total_size = int(r.headers.get('content-length', 0))  # tamanho total
+                    block_size = 8192
+                    progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
+
                     with open(local_path, 'wb') as f:
-                        for chunk in r.iter_content(chunk_size=8192):
+                        for chunk in r.iter_content(chunk_size=block_size):
                             f.write(chunk)
-                print(f"'{file_name}' saved successfully!")
+                            progress_bar.update(len(chunk))
+
+                    progress_bar.close()
+
+                    if total_size != 0 and progress_bar.n != total_size:
+                        print(f"Warning: '{file_name}' downloaded size does not match expected.")
+                    else:
+                        print(f"'{file_name}' saved successfully!")
+
             except requests.exceptions.RequestException as e:
                 print(f"Error downloading the file '{file_name}': {e}")
                 continue
