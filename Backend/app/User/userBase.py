@@ -18,8 +18,8 @@ class UserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
-    company: str
     phone: str
+    company: str
     data_criacao: datetime
 
     class Config:
@@ -45,3 +45,8 @@ class UserResponseLogin(BaseModel):
     status: str
     message: str
     data: ResponseDataLogin
+    
+class UserResponseRegister(BaseModel):
+    status: str
+    message: str
+    data: UserResponse

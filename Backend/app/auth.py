@@ -3,7 +3,7 @@ from typing_extensions import Annotated
 from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
 from fastapi.security import  OAuth2PasswordBearer
-from User.userBase import LoginRequest, UserResponseLogin, ResponseDataLogin, UserDataLogin
+from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogin, ResponseDataLogin, UserDataLogin, UserResponseRegister
 from database import SessionLocal
 from models import User
 from datetime import timedelta, datetime
@@ -62,4 +62,33 @@ async def login_for_access_token(login_data: LoginRequest, db: db_dependency):
             token=token,
             usuario=UserDataLogin.model_validate()(user)
         )
+    )
+    
+@router.post("/register", response_model=UserResponseRegister, status_code=status.HTTP_201_CREATED)
+async def register_user(user_data: UserBase, db: db_dependency):
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "status": "error",
+                "message": "Email já cadastrado ou dados inválidos",
+                "code": 400
+            })
+    
+    hashed_password = bcrypt_context.hash(user_data.password)
+    
+    new_user = User(
+        user_data.model_dump(exclude={'password'}),
+        password=hashed_password
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return UserResponseRegister(
+        status="success",
+        message="Cadastro realizado com sucesso",
+        data=UserResponse.model_validate()(new_user)
     )
