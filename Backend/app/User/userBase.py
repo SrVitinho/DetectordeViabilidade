@@ -9,7 +9,7 @@ class UserBase(BaseModel):
     password: str
     
 class UserUpdate(BaseModel):
-    ID: int
+    id: int
     name: str 
     company: str
     phone: str
@@ -23,4 +23,25 @@ class UserResponse(BaseModel):
     data_criacao: datetime
 
     class Config:
-        orm_mode = True
+       from_attributes = True
+    
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+    
+class UserDataLogin(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    
+    class Config:
+        from_attributes = True
+
+class ResponseDataLogin(BaseModel):
+    token: str
+    usuario: UserDataLogin
+
+class UserResponseLogin(BaseModel):
+    status: str
+    message: str
+    data: ResponseDataLogin
