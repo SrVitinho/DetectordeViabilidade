@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  
 import uvicorn
 
-from app import auth
+from Backend import auth
 
 app = FastAPI()
 
