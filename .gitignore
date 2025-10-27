@@ -3,5 +3,5 @@ TratamentoInicial/*
 .env
 __pycache__/
 ExploracaoDados\ExtracoesBanco\*
-Modelagem/catboost_info
+Modelagem/catboost_info/*
 Modelagem/ModeloPersistentes/*
