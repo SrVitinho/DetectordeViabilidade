@@ -2,3 +2,4 @@ DadosRF/*
 TratamentoInicial/*
 .env
 __pycache__/
+ExploracaoDados\ExtracoesBanco\*
