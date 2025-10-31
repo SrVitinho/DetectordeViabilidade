@@ -3,8 +3,9 @@ from typing_extensions import Annotated
 from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
 from fastapi.security import  OAuth2PasswordBearer
+from datetime import timedelta, datetime, timezone
 from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogin, ResponseDataLogin, UserDataLogin, UserResponseRegister
-from Backend.app.database import SessionLocal
+from database import SessionLocal
 from models import User
 from datetime import timedelta, datetime
 from jose import jwt
@@ -39,7 +40,7 @@ def authenticate_user(email: str, password: str, db):
 
 def create_access_token(email: str, user_id: int, expires_delta: timedelta):
     encode = {"sub": email, "id": user_id}
-    expires = datetime.now(datetime.timezone.utc) + expires_delta
+    expires = datetime.now(timezone.utc) + expires_delta
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, ALGORITHM)
 
@@ -60,7 +61,7 @@ async def login_for_access_token(login_data: LoginRequest, db: db_dependency):
         message="Login realizado com sucesso",
         data=ResponseDataLogin(
             token=token,
-            usuario=UserDataLogin.model_validate()(user)
+            usuario=UserDataLogin.model_validate(user)
         )
     )
     
@@ -75,11 +76,20 @@ async def register_user(user_data: UserBase, db: db_dependency):
                 "message": "Email já cadastrado ou dados inválidos",
                 "code": 400
             })
+
+    if len(user_data.password.encode('utf-8')) > 72:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "status": "error",
+                "message": "A senha não pode ter mais de 72 caracteres.",
+                "code": 400
+            })
     
     hashed_password = bcrypt_context.hash(user_data.password)
     
     new_user = User(
-        user_data.model_dump(exclude={'password'}),
+        **user_data.model_dump(exclude={'password'}),
         password=hashed_password
     )
     
@@ -90,5 +100,5 @@ async def register_user(user_data: UserBase, db: db_dependency):
     return UserResponseRegister(
         status="success",
         message="Cadastro realizado com sucesso",
-        data=UserResponse.model_validate()(new_user)
+        data=UserResponse.model_validate(new_user)
     )

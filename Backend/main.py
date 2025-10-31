@@ -1,8 +1,10 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from sqlalchemy.testing.suite.test_reflection import users
 
-from Backend import auth
+import auth
+from User import userController
 
 app = FastAPI()
 
@@ -20,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(userController.router)
 
 
 @app.get("/")
