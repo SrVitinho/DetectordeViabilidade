@@ -1,6 +1,6 @@
 from fastapi.responses import JSONResponse
 from typing_extensions import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from passlib.context import CryptContext
 from fastapi.security import  OAuth2PasswordBearer
 from datetime import timedelta, datetime, timezone
@@ -8,18 +8,18 @@ from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogi
 from database import SessionLocal
 from models import User
 from datetime import timedelta, datetime
-from jose import jwt
+from jose import jwt, JWTError
 from keys import ALGORITHM, SECRET_KEY
 from starlette import status
 
 
 router = APIRouter(
-    prefix='/api/auth',
+    prefix='/auth',
     tags=['auth']
 )
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated='auto')
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/login')
     
 def get_db():
     db = SessionLocal()
@@ -102,3 +102,27 @@ async def register_user(user_data: UserBase, db: db_dependency):
         message="Cadastro realizado com sucesso",
         data=UserResponse.model_validate(new_user)
     )
+    
+def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Não foi possível validar as credenciais.",
+        headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        email: str = payload.get("sub")
+        user_id: int = payload.get("id")
+        if email is None or user_id is None:
+            return credentials_exception
+    
+    except JWTError:
+        raise credentials_exception
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if user is None:
+        raise credentials_exception
+    return user
+
+auth_dependency = Annotated[User, Depends(get_current_user)]
