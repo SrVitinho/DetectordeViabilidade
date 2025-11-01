@@ -10,7 +10,7 @@ from auth import bcrypt_context, get_db
 db_dependency = Annotated[Session, Depends(get_db)]
 
 router = APIRouter(
-    prefix='/api/users',
+    prefix='/users',
     tags=['Users']
 )
 
