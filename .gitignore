@@ -2,6 +2,6 @@ DadosRF/*
 TratamentoInicial/*
 .env
 __pycache__/
-ExploracaoDados\ExtracoesBanco\*
+ExploracaoDados/ExtracoesBanco/*
 Modelagem/catboost_info/*
 Modelagem/ModeloPersistentes/*

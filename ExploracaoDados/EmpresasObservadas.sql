@@ -29,6 +29,6 @@ from
             ,[UF]
             ,[MUNICÍPIO]
         FROM ReceitaFederal..Estabelecimentos
-        WHERE (([DATA DE INÍCIO ATIVIDADE] BETWEEN 20100101 AND 20200101) OR ([DATA DE INÍCIO ATIVIDADE] > 20220101)) AND ([PAIS] IS NULL OR [PAIS] IN (0, 105, 106))
+        WHERE (([DATA DE INÍCIO ATIVIDADE] BETWEEN 20080101 AND 20200101) OR ([DATA DE INÍCIO ATIVIDADE] > 20220101)) AND ([PAIS] IS NULL OR [PAIS] IN (0, 105, 106))
     ) t1
 left join ReceitaFederal..Empresas t2 ON t1.[CNPJ BÁSICO] = t2.[CNPJ BÁSICO];

@@ -1,34 +1,52 @@
-drop table if exists ReceitaFederal..DadosEmpresasParaModeloV2;
+drop table if exists ReceitFederal..DadosEmpresasParaModeloV2;
 
 select 
 	t1.*
       , floor([DATA DE INÍCIO ATIVIDADE]/10000) as ANOABERTURA
-      , t2.[POPULAÇÃO_ESTIMADA]
-      , t2.[CD_MUNIC_INT]
-      , t2.[PIB_2010]
-      , t2.[PIB_2011]
-      , t2.[PIB_2012]
-      , t2.[PIB_2013]
-      , t2.[PIB_2014]
-      , t2.[PIB_2015]
       , t2.[PIB_2016]
-      , t2.[PIB_2017]
-      , t2.[PIB_2018]
-      , t2.[PIB_2019]
-      , t2.[PIB_2020]
-      , t2.[PIB_2021]
-      , t2.[INSS_QTD_25]
-      , t2.[INSS_VLR_25]
-      , t2.[NivelAlfabetizacao]
-      , t3.taxaSelicAbertura
+      ,t2.[PIB_2017]
+      ,t2.[PIB_2018]
+      ,t2.[PIB_2019]
+      ,t2.[PIB_2020]
+      ,t2.[PIB_2021]
+      ,t2.[Quant_Benificiarios]
+      ,t2.[Inss_Pagou_2022]
+      ,t2.[INSS_Ticket_Medio]
+      ,t2.[PIB_Medio]
+      ,t2.[PIB_Delta_Abs]
+      ,t2.[PIB_Cresc]
+      ,t2.[População_Masc_2021]
+      ,t2.[População_Fem_2021]
+      ,t2.[De_0_a_4_anos]
+      ,t2.[De_5_a_9_anos]
+      ,t2.[De_10_a_14_anos]
+      ,t2.[De_15_a_19_anos]
+      ,t2.[De_20_a_24_anos]
+      ,t2.[De_25_a_29_anos]
+      ,t2.[De_30_a_34_anos]
+      ,t2.[De_35_a_39_anos]
+      ,t2.[De_40_a_44_anos]
+      ,t2.[De_45_a_49_anos]
+      ,t2.[De_50_a_54_anos]
+      ,t2.[De_55_a_59_anos]
+      ,t2.[De_60_a_64_anos]
+      ,t2.[De_65_a_69_anos]
+      ,t2.[De_70_a_74_anos]
+      ,t2.[De_80_anos_ou_mais]
+      ,t2.[De_75_a_79_anos]
+      ,t2.[Pib_2016_Corrigido]
+      ,t2.[PIB_Delta_Corr]
+      ,t2.[PIB_Cresc_Corr]
+      ,t2.[POP_22]
       , t4.EmpresasSimilaresAbertas
+      , t5.EmpresasSimilaresFechadas
       , CASE 
-            WHEN [SITUAÇÃO CADASTRAL] > 2 AND MesesAteSituacaoAtual < 48 THEN 1 -- 1 Morte prematura
-            WHEN [SITUAÇÃO CADASTRAL] < 3 and IdadeCadastroEmMeses >= 48 THEN 2 -- 0 Viavel
+            WHEN [SITUAÇÃO CADASTRAL] > 2 AND MesesAteSituacaoAtual < 48 THEN 1 -- 1 Viavel
+            WHEN [SITUAÇÃO CADASTRAL] < 3 and IdadeCadastroEmMeses >= 48 THEN 2 -- 2 Viavel
             WHEN [SITUAÇÃO CADASTRAL] > 2 AND MesesAteSituacaoAtual >= 48 THEN 1 -- 0 Viavel
-            WHEN [SITUAÇÃO CADASTRAL] < 3 AND MesesAteSituacaoAtual < 48 THEN 0 -- 2 Em processo
+            WHEN [SITUAÇÃO CADASTRAL] < 3 AND MesesAteSituacaoAtual < 48 THEN 0 -- 0 Em processo
         end as ClassicacaoDeViabilidada
-into ReceitaFederal..DadosEmpresasParaModeloV2
+into ReceitFederal..DadosEmpresasParaModeloV2
 from (
 		select
           t1.[CNPJ BÁSICO]
@@ -83,14 +101,13 @@ from (
             , [OPÇÃO PELO SIMPLES] as SIMPLESATIVO
 			, [OPÇÃO PELO MEI] AS MEIATIVO
             , t2.CÓDIGO_DO_MUNICÍPIO_IBGE
-		from ReceitaFederal..EmpresasNacionaisPeriodo t1
-		left join ReceitaFederal..CodMunicipiosRF t2 on t1.MUNICÍPIO = t2.[CÓDIGO_DO_MUNICÍPIO_TOM]
-        left join ReceitaFederal..Simples t3 on t1.[CNPJ BÁSICO] = t3.[CNPJ BÁSICO]
+		from ReceitFederal..EmpresasNacionaisPeriodoAmostra t1
+		left join ReceitFederal..CodMunicipiosRF t2 on t1.MUNICÍPIO = t2.[CÓDIGO_DO_MUNICÍPIO_TOM]
+        left join ReceitFederal..Simples t3 on t1.[CNPJ BÁSICO] = t3.[CNPJ BÁSICO]
 ) t1
-left join ReceitaFederal..DadosMunic t2 on t1.CÓDIGO_DO_MUNICÍPIO_IBGE = t2.CD_MUNIC_INT
-left join ReceitaFederal..TaxaSelicAbertura t3 ON floor([DATA DE INÍCIO ATIVIDADE]/10000) = t3.Ano 
-left join ReceitaFederal..MICROEMPRESASABERTASPORANO t4 on t1.CEP = t4.CEP AND t1.[CNAE FISCAL PRINCIPAL] = t4.[CNAE FISCAL PRINCIPAL] AND floor([DATA DE INÍCIO ATIVIDADE]/10000) = t4.ANOABERTURA
-left join ReceitaFederal..MICROEMPRESASFECHADASSPORANO t5 on t1.CEP = t4.CEP AND t1.[CNAE FISCAL PRINCIPAL] = t5.[CNAE FISCAL PRINCIPAL] AND (floor([DATA DE INÍCIO ATIVIDADE]/10000)-1) = t5.ANOBAIXA
+left join ReceitFederal..DadosMunic t2 on t1.CÓDIGO_DO_MUNICÍPIO_IBGE = t2.ID_MUN
+left join ReceitFederal..MICROEMPRESASABERTASPORANO t4 on t1.CEP = t4.CEP AND t1.[CNAE FISCAL PRINCIPAL] = t4.[CNAE FISCAL PRINCIPAL] AND floor([DATA DE INÍCIO ATIVIDADE]/10000) = t4.ANOABERTURA
+left join ReceitFederal..MICROEMPRESASFECHADASSPORANO t5 on t1.CEP = t5.CEP AND t1.[CNAE FISCAL PRINCIPAL] = t5.[CNAE FISCAL PRINCIPAL] AND (floor([DATA DE INÍCIO ATIVIDADE]/10000)-1) = t5.ANOBAIXA
 where ([PORTE DA EMPRESA] < 3 OR [PORTE DA EMPRESA] is null) and (MEIATIVO like 'N') and (([SITUAÇÃO CADASTRAL] > 2 and MesesAteSituacaoAtual > 1) or [SITUAÇÃO CADASTRAL] < 3) and (IdadeCadastroEmMeses > 3);
  -- filtramos qualquer CNPJ que não seja de micro-empresa, retira MEIs, retira empresas com menos de 3 meses de cadastro, retira empresas que faliram com menos de 2 meses
 
