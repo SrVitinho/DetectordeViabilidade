@@ -5,6 +5,7 @@ from sqlalchemy.testing.suite.test_reflection import users
 
 import auth
 from User import userController
+from Viabilidade import viabilidadeController
 
 app = FastAPI()
 
@@ -23,7 +24,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(userController.router)
-
+app.include_router(viabilidadeController.router)
 
 @app.get("/")
 async def root():

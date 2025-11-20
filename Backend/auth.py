@@ -1,6 +1,6 @@
 from fastapi.responses import JSONResponse
 from typing_extensions import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from passlib.context import CryptContext
 from fastapi.security import  OAuth2PasswordBearer
 from datetime import timedelta, datetime, timezone
@@ -8,7 +8,7 @@ from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogi
 from database import SessionLocal
 from models import User
 from datetime import timedelta, datetime
-from jose import jwt
+from jose import jwt, JWTError
 from keys import ALGORITHM, SECRET_KEY
 from starlette import status
 
@@ -43,6 +43,29 @@ def create_access_token(email: str, user_id: int, expires_delta: timedelta):
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, ALGORITHM)
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Não foi possível validar as credenciais",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("id")    
+        if user_id is None:
+            raise credentials_exception
+            
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if user is None:
+        raise credentials_exception
+        
+    return user
 
 @router.post("/login", response_model=UserResponseLogin)
 async def login_for_access_token(login_data: LoginRequest, db: db_dependency):
