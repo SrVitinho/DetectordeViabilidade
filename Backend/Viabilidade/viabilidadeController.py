@@ -7,6 +7,7 @@ import json
 from database import SessionLocal
 from models import Viabilidade, User
 from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse
+from ML.loader import predict_viabilidade
 from auth import get_current_user, get_db
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -33,12 +34,40 @@ async def analisar_viabilidade(
                 "code": 400
             }
         )
-        
-        
-    #sem modelo
-    score_simulado = 85.0
-    e_viavel = True
     
+    valor_mei = 1 if dados.empresa.isMei else 0
+    
+    input_modelo = [
+        dados.localizacao.cep,
+        dados.localizacao.rua,
+        dados.localizacao.numero,
+        dados.localizacao.complemento,
+        dados.localizacao.bairro,
+        dados.localizacao.cidade,
+        dados.localizacao.uf,
+        dados.empresa.cnae,
+        dados.empresa.capitalInicial,
+        valor_mei
+    ]#ver se ordem importa
+    
+    try:
+        score_calculado = predict_viabilidade(input_modelo)
+        sera_viavel = score_calculado >= 60.0       #analisar como definir isso
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            score_calculado = 0.0,
+            sera_viavel = False,
+            content={
+                "status": "error",
+                "message": f"Erro ao processar a análise de viabilidade: {e}",
+                "code": 500
+            }
+            
+        )
+        
+        
+    #verificar como retornar isso aq
     detalhes_mock = {
         "analise_localizacao": f"O bairro {dados.localizacao.bairro} possui alto fluxo para o CNAE {dados.empresa.cnae}.",
         "analise_mercado": "Baixa saturação de concorrentes na região.",
@@ -59,8 +88,8 @@ async def analisar_viabilidade(
         cnae=dados.empresa.cnae,
         capital_inicial=dados.empresa.capitalInicial,
         is_mei=dados.empresa.isMei,
-        pontuacao=score_simulado,
-        viavel=e_viavel,
+        pontuacao=float(score_calculado),
+        viavel=sera_viavel,
         analise_localizacao=detalhes_mock["analise_localizacao"],
         analise_mercado=detalhes_mock["analise_mercado"],
         analise_economica=detalhes_mock["analise_economica"],
