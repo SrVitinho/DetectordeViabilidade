@@ -1,0 +1,14 @@
+# Framework e Servidor
+fastapi
+uvicorn
+
+# Banco de Dados (Apenas SQL Server)
+sqlalchemy
+pyodbc
+
+# Autenticação e Segurança
+passlib[bcrypt]
+python-jose[cryptography]
+
+# Validação de E-mail para Pydantic
+email-validator
