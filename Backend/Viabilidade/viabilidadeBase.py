@@ -16,14 +16,9 @@ class ViabilidadeRequest(BaseModel):
     empresa: EmpresaBase
     
 class DetalhesResultado(BaseModel):
-    analise_localizacao: str
-    analise_mercado: str
-    analise_economica: str
-    fatores_risco: List[str]
-    recomendacoes: List[str]
-    
+    analise_localizacao: int
+
 class ResultadoViabilidade(BaseModel):
-    viavel: bool
     pontuacao: float
     detalhes: DetalhesResultado
     

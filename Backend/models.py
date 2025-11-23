@@ -26,27 +26,14 @@ class Viabilidade(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("User.id"))
     
-    cep = Column(String(20))
-    rua = Column(String(150))
-    numero = Column(String(20))
-    complemento = Column(String(100), nullable=True)
-    bairro = Column(String(100))
-    cidade = Column(String(100))
+    cep = Column(Integer)
+    cidade = Column(Integer)
     uf = Column(String(2))
     
     cnae = Column(String(20))
-    capital_incial = Column(Float)
     is_mei = Column(Boolean)
     
     pontuacao = Column(Float)
-    viavel = Column(Boolean)
-    
-    analise_localizacao = Column(Text)
-    analise_mercado = Column(Text)
-    analise_economica = Column(Text)
-    
-    fatores_risco = Column(Text)
-    recomendacoes = Column(Text)
     
     data_analise = Column(
         DateTime(timezone=True), 
@@ -55,7 +42,6 @@ class Viabilidade(Base):
     
     usuario = relationship("User", back_populates="analises")
     
-
 class DadosMunic(Base):
     __tablename__ = "DadosMunic"
 
@@ -103,3 +89,19 @@ class DadosMunic(Base):
     PIB_Delta_Corr = Column(Numeric(20, 2), nullable=True)
     PIB_Cresc_Corr = Column(Numeric(20, 2), nullable=True)
     POP_22 = Column(Integer, nullable=True)
+
+class MicroEmpresasFechadasPorAno(Base):
+    __tablename__ = "MICROEMPRESASFECHADASSPORANO"
+
+    EmpresasSimilaresFechadas = Column(Integer, nullable=False)
+    ANOBAIXA = Column(Integer, nullable=False, primary_key=True, index=True)
+    CNAE_FISCAL_PRINCIPAL = Column('CNAE FISCAL PRINCIPAL', String, primary_key=True)
+    CEP = Column(String(8), nullable=False, primary_key=True, index=True)
+
+class MicroEmpresasAbertasPorAno(Base):
+    __tablename__ = "MICROEMPRESASABERTASPORANO"
+
+    EmpresasSimilaresAbertas = Column(Integer, nullable=False)
+    ANOABERTURA = Column(Integer, nullable=False, primary_key=True, index=True)
+    CNAE_FISCAL_PRINCIPAL = Column('CNAE FISCAL PRINCIPAL', String, primary_key=True)
+    CEP = Column(String(8), nullable=False, primary_key=True, index=True)
