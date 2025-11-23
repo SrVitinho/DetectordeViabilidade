@@ -103,13 +103,7 @@ async def analisar_viabilidade(
     
     nova_analise = Viabilidade(
         user_id=user.id,
-        cep=dados.localizacao.endereco,
-        rua=dados.localizacao.rua,
-        numero=dados.localizacao.numero,
-        complemento=dados.localizacao.complemento,
-        bairro=dados.localizacao.bairro,
-        cidade=dados.localizacao.cidade,
-        uf=dados.localizacao.uf,
+        cep=dados.localizacao.cep,
         cnae=dados.empresa.cnae,
         capital_inicial=dados.empresa.capitalInicial,
         is_mei=dados.empresa.isMei,
