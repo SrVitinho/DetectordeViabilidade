@@ -52,11 +52,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        print("a")
+        print(token)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print("b")
         user_id: int = payload.get("id")    
-        print("c")
         if user_id is None:
             raise credentials_exception
             
@@ -86,6 +84,7 @@ async def login_for_access_token(login_data: LoginRequest, db: db_dependency):
                 "code": 401
             })
     token = create_access_token(user.email, user.id,  timedelta(days=3))
+    print(token)
     return UserResponseLogin(
         status="success",
         message="Login realizado com sucesso",
