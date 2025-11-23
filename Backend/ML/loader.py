@@ -5,10 +5,11 @@ model = None
 
 def load_model():
     base_path = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(base_path, "model_v1.pkl")
+    model_path = os.path.join(base_path, "modelo_final.pkl")
     
     print(f"Carregando modelo de IA: {model_path}")
     try:
+        global model
         model = joblib.load(model_path)
         print("Modelo carregado com sucesso!")
     except Exception as e:
