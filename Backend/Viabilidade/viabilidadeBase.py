@@ -7,7 +7,8 @@ class LocalizacaoBase(BaseModel):
     
 class EmpresaBase(BaseModel):
     cnae: str
-    capitalInicial: float
+    naturezaJuridica: int
+    qualificacaoDoResponsavel: int
     isMei: bool = False
     
 class ViabilidadeRequest(BaseModel):
