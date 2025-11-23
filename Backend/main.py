@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import auth
 from User import userController
 from Viabilidade import viabilidadeController
+from Helpers import helperController
 from ML.loader import load_model
 
 @asynccontextmanager
@@ -32,6 +33,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(userController.router)
 app.include_router(viabilidadeController.router)
+app.include_router(helperController.router)
+
 
 @app.get("/")
 async def root():
