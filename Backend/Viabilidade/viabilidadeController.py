@@ -27,7 +27,7 @@ async def analisar_viabilidade(
 ):
     try:
         if "-" in dados.localizacao.cep:
-            dados.localizacao.cep = int(dados.localizacao.cep.str.replace("-",""))
+            dados.localizacao.cep = int(dados.localizacao.cep.replace("-",""))
 
         else:
             dados.localizacao.cep = int(dados.localizacao.cep)
@@ -45,7 +45,8 @@ async def analisar_viabilidade(
             }
         )
     
-    except:
+    except Exception as err:
+            print(err)
             return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
