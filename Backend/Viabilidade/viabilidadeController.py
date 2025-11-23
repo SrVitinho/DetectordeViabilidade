@@ -69,12 +69,6 @@ async def analisar_viabilidade(
     
     input_modelo = [
         dados.localizacao.cep,
-        dados.localizacao.rua,
-        dados.localizacao.numero,
-        dados.localizacao.complemento,
-        dados.localizacao.bairro,
-        dados.localizacao.cidade,
-        dados.localizacao.uf,
         dados.empresa.cnae,
         dados.empresa.capitalInicial,
         valor_mei
