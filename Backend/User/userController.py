@@ -18,7 +18,7 @@ router = APIRouter(
 @router.get("/", response_model=List[UserResponse])
 async def get_all_users(db: db_dependency, skip: int = 0, limit: int = 100):
 
-    users = db.query(User).offset(skip).limit(limit).all()
+    users = db.query(User).order_by(User.id).offset(skip).limit(limit).all()
     return users
 
 
