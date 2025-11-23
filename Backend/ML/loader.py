@@ -20,6 +20,7 @@ def predict_viabilidade(dados_entrada):
         load_model()
     
     if model:
-        return model.predict([dados_entrada])[0]
+        previsao = model.predict_proba(dados_entrada)[0][0]
+        return previsao
     
     return 0.0
