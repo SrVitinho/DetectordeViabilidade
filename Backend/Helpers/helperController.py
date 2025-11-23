@@ -15,6 +15,7 @@ class ItemAuxiliar(BaseModel):
     observacoes: Optional[str] = None
     
 QUALIFICACOES_FIXAS = [
+  {"codigo": "05", "descricao": "Administrador"},
   { "codigo": "08", "descricao": "Conselheiro de Administração" },
   { "codigo": "09", "descricao": "Curador" },
   { "codigo": "10", "descricao": "Diretor" },
