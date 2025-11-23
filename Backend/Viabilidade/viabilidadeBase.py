@@ -4,12 +4,6 @@ from datetime import datetime
 
 class LocalizacaoBase(BaseModel):
     cep: str
-    rua: str
-    numero: str
-    complemento: Optional[str] = None
-    bairro: str
-    cidade: str
-    uf: str
     
 class EmpresaBase(BaseModel):
     cnae: str

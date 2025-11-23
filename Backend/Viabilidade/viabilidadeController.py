@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Annotated
 import json
+import requests
 
 from database import SessionLocal
 from models import Viabilidade, User
@@ -24,6 +25,35 @@ async def analisar_viabilidade(
     user: user_dependency, 
     db: db_dependency
 ):
+    try:
+        if "-" in dados.localizacao.cep:
+            dados.localizacao.cep = int(dados.localizacao.cep.str.replace("-",""))
+
+        else:
+            dados.localizacao.cep = int(dados.localizacao.cep)
+        
+        r = requests.get(f"https://viacep.com.br/ws/{dados.localizacao.cep}/json/")
+
+        cdMunic = r.json()["ibge"]
+        print(cdMunic)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "100",
+                "message": "Deu nois",
+                "code": 200
+            }
+        )
+    
+    except:
+            return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "status": "error",
+                "message": "CEP inválido ou não informado.",
+                "code": 400
+            }
+        )
     
     if not dados.empresa.cnae or len(dados.empresa.cnae) < 4:
         return JSONResponse(
