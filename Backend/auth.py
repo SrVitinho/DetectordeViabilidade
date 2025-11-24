@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from passlib.context import CryptContext
 from fastapi.security import  OAuth2PasswordBearer
 from datetime import timedelta, datetime, timezone
-from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogin, ResponseDataLogin, UserDataLogin, UserResponseRegister
+from User.userBase import LoginRequest, UserBase, UserResponse, UserResponseLogin, ResponseDataLogin, UserDataLogin, UserResponseRegister, UserResponseVerify
 from database import SessionLocal
 from models import User
 from datetime import timedelta, datetime
@@ -124,4 +124,12 @@ async def register_user(user_data: UserBase, db: db_dependency):
         status="success",
         message="Cadastro realizado com sucesso",
         data=UserResponse.model_validate(new_user)
+    )
+    
+@router.get("/verify", response_model=UserResponseVerify)
+async def verify_token(current_user: Annotated[User, Depends(get_current_user)]):
+    return UserResponseVerify(
+        status="success",
+        message="Token válido",
+        data=UserResponse.model_validate(current_user)
     )
