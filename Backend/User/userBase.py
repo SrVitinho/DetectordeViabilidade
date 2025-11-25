@@ -50,3 +50,8 @@ class UserResponseRegister(BaseModel):
     status: str
     message: str
     data: UserResponse
+    
+class UserResponseVerifyToken(BaseModel):
+    status: str
+    message: str
+    data: UserResponse
