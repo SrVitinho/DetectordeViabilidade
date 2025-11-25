@@ -22,9 +22,19 @@ class ResultadoViabilidade(BaseModel):
     pontuacao: float
     detalhes: DetalhesResultado
     
+class LocalizacaoResponse(BaseModel):
+    cep: str
+    rua: Optional[str] = None
+    bairro: Optional[str] = None
+    cidade: str
+    uf: str
+    latitude: str
+    longitude: str
+    
 class DadosViabilidadeResponse(BaseModel):
     viabilidade_id: int
     resultado: ResultadoViabilidade
+    localizacao: LocalizacaoResponse
     data_analise: datetime
     
 class ViabilidadeResponse(BaseModel):
