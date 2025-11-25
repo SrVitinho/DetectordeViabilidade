@@ -357,7 +357,8 @@ async def get_analise_detalhes(
         fatores_lista = []
         recomendacoes_lista = []
         
-        lat_api = None
+    
+    lat_api = None
     lng_api = None
     rua_api = getattr(analise, 'rua', None)
     bairro_api = getattr(analise, 'bairro', None)
