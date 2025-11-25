@@ -48,6 +48,7 @@ class HistoricoItem(BaseModel):
     id: int
     cnae: str
     local: str
+    cep: str
     pontuacao: float
     viavel: bool
     data_analise: datetime
