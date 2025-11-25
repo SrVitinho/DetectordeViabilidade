@@ -9,6 +9,7 @@ class EmpresaBase(BaseModel):
     cnae: str
     naturezaJuridica: int
     qualificacaoDoResponsavel: int
+    capitalInicial: float
     isMei: bool = False
     
 class ViabilidadeRequest(BaseModel):

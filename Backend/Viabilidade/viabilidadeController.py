@@ -226,13 +226,24 @@ async def analisar_viabilidade(
             
         )
 
-    
+    e_viavel = score_calculado >= 0.6 
     
     nova_analise = Viabilidade(
         user_id=user.id,
         cep=cep_filtrado,
         cidade=cdMunic,
         uf=municObservado.UF,
+        rua=dados_endereco.get("rua"),
+        bairro=dados_endereco.get("bairro"),
+        capital_inicial=dados.empresa.capitalInicial,
+        viavel=e_viavel,
+        
+        analise_localizacao=f"Análise para o CEP {cep_filtrado}", 
+        analise_mercado="Análise pendente...",
+        analise_economica="Análise pendente...",
+        fatores_risco="[]",
+        recomendacoes="[]",
+        
         cnae=dados.empresa.cnae,
         is_mei=dados.empresa.isMei,
         pontuacao=score_calculado

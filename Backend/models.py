@@ -29,11 +29,21 @@ class Viabilidade(Base):
     cep = Column(Integer)
     cidade = Column(Integer)
     uf = Column(String(2))
+    rua = Column(String)
+    bairro = Column(String)
+    capital_inicial = Column(Float)
+    viavel = Column(Boolean)
     
     cnae = Column(String(20))
     is_mei = Column(Boolean)
     
     pontuacao = Column(Float)
+    
+    analise_localizacao = Column(String)
+    analise_mercado = Column(String)
+    analise_economica = Column(String)
+    fatores_risco = Column(String) 
+    recomendacoes = Column(String)
     
     data_analise = Column(
         DateTime(timezone=True), 
