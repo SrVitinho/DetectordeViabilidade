@@ -33,7 +33,7 @@ async def analisar_viabilidade(
         else:
             dados.localizacao.cep = (dados.localizacao.cep)
         print(dados.localizacao.cep)
-        r = requests.get(f"https://viacep.com.br/ws/{dados.localizacao.cep}/json/")
+        r = requests.get(f"https://cep.awesomeapi.com.br/json/{dados.localizacao.cep}")
 
         cdMunic = r.json()["ibge"]
         print(cdMunic)
@@ -137,7 +137,6 @@ async def analisar_viabilidade(
         'EmpresasSimilaresFechadas'
     ]
 
-# Crie um DataFrame em vez de numpy array
     inputModelo = pd.DataFrame([[
         dados.empresa.cnae,
         dados.localizacao.cep,
