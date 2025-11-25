@@ -91,7 +91,7 @@ class DadosMunic(Base):
     POP_22 = Column(Integer, nullable=True)
 
 class MicroEmpresasFechadasPorAno(Base):
-    __tablename__ = "MICROEMPRESASFECHADASSPORANO"
+    __tablename__ = "MICROEMPRESASFECHADASPORANO"
 
     EmpresasSimilaresFechadas = Column(Integer, nullable=False)
     ANOBAIXA = Column(Integer, nullable=False, primary_key=True, index=True)
