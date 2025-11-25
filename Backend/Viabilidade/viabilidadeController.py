@@ -8,7 +8,7 @@ import pandas as pd
 
 from database import SessionLocal
 from models import Viabilidade, User, DadosMunic, MicroEmpresasAbertasPorAno, MicroEmpresasFechadasPorAno
-from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse
+from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse, LocalizacaoResponse
 from ML.loader import predict_viabilidade
 from auth import get_current_user, get_db
 
@@ -26,25 +26,46 @@ async def analisar_viabilidade(
     user: user_dependency, 
     db: db_dependency
 ):
-    try:
-        if "-" in dados.localizacao.cep:
-            dados.localizacao.cep = (dados.localizacao.cep.replace("-",""))
-
-        else:
-            dados.localizacao.cep = (dados.localizacao.cep)
-        print(dados.localizacao.cep)
-        r = requests.get(f"https://cep.awesomeapi.com.br/json/{dados.localizacao.cep}")
-
-        cdMunic = r.json()["ibge"]
-        print(cdMunic)
+    dados_endereco = {}
+    cdMunic = ""
     
+    try:
+        cep_filtrado = dados.localizacao.cep.replace("-", "").replace(".", "").strip()
+            
+        r = requests.get(f"https://cep.awesomeapi.com.br/json/{cep_filtrado}")
+        
+        if r.status_code != 200:
+            raise Exception("CEP não encontrado na API.")
+        
+        api_data = r.json()
+        
+        if "city_ibge" not in api_data:
+            raise Exception("CEP válido, mas sem código IBGE associado")
+        
+        cdMunic = api_data["city_ibge"]
+        
+        rua = api_data.get("address", "")
+        bairro = api_data.get("district", "")
+        
+        dados_endereco = {
+            "cep": api_data.get("cep", cep_filtrado),
+            "rua": rua if rua else None,
+            "bairro": bairro if bairro else None,
+            "cidade": api_data.get("city"),
+            "uf": api_data.get("state"),
+            "lat": api_data.get("lat"),
+            "lng": api_data.get("lng")
+        }
+        
+        print(f"Município IBGE: {cdMunic} | Lat: {dados_endereco['lat']}| Lng: {dados_endereco['lng']}")
+
     except Exception as err:
             print(err)
             return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
                 "status": "error",
-                "message": "CEP inválido ou não informado.",
+                "message": "CEP inválido, não encontrado ou serviço indisponível.",
                 "code": 400
             }
         )
@@ -70,6 +91,12 @@ async def analisar_viabilidade(
     valor_mei = 'S' if dados.empresa.isMei else 'N'
     
     municObservado = db.query(DadosMunic).filter(DadosMunic.ID_MUN == cdMunic).first()
+    
+    if not municObservado:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"status": "error", "message": "Dados do município não encontrados na base interna.", "code": 404}
+        )
 
     cnaesAbertos = db.query(MicroEmpresasAbertasPorAno).filter((MicroEmpresasAbertasPorAno.ANOABERTURA == 2024) , (MicroEmpresasAbertasPorAno.CEP == dados.localizacao.cep) , (MicroEmpresasAbertasPorAno.CNAE_FISCAL_PRINCIPAL == dados.empresa.cnae)).first()
 
@@ -88,7 +115,6 @@ async def analisar_viabilidade(
     else:
         nCnaesFechados = cnaesFechados.EmpresasSimilaresFechadas
 
-    print(municObservado.Nome_Mun)
     feature_names = [
         'CNAE FISCAL PRINCIPAL',
         'CEP',
@@ -200,17 +226,11 @@ async def analisar_viabilidade(
             
         )
 
-    '''detalhes_mock = { - explainable IA - Passo futuro
-        "analise_localizacao": f"O bairro {dados.localizacao.bairro} possui alto fluxo para o CNAE {dados.empresa.cnae}.",
-        "analise_mercado": "Baixa saturação de concorrentes na região.",
-        "analise_economica": f"Capital de R$ {dados.empresa.capitalInicial} é adequado para o início.",
-        "fatores_risco": ["Variação cambial", "Reformas na rua prevista"],
-        "recomendacoes": ["Investir em marketing local", "Contratar 2 funcionários"]
-    }'''
+    
     
     nova_analise = Viabilidade(
         user_id=user.id,
-        cep=dados.localizacao.cep,
+        cep=cep_filtrado,
         cidade=cdMunic,
         uf=municObservado.UF,
         cnae=dados.empresa.cnae,
@@ -228,10 +248,21 @@ async def analisar_viabilidade(
         data=DadosViabilidadeResponse(
             viabilidade_id=nova_analise.id,
             data_analise=nova_analise.data_analise,
+            
+            localizacao=LocalizacaoResponse(
+                cep=dados_endereco["cep"],
+                rua=dados_endereco["rua"],
+                bairro=dados_endereco["bairro"],
+                cidade=dados_endereco["cidade"],
+                uf=dados_endereco["uf"],
+                latitude=dados_endereco["lat"],
+                longitude=dados_endereco["lng"]
+            ),
+            
             resultado=ResultadoViabilidade(
                 pontuacao=nova_analise.pontuacao,
                 detalhes=DetalhesResultado(
-                    analise_localizacao=nova_analise.cep
+                    analise_localizacao=cep_filtrado
                 )
             ),
         ),
