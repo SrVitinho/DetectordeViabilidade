@@ -309,6 +309,7 @@ async def get_historico_usuario(
                 id=viabilidade.id,
                 cnae=viabilidade.cnae,
                 local=local_completo,
+                cep=viabilidade.cep,
                 pontuacao=viabilidade.pontuacao,
                 viavel=viabilidade.viavel if viabilidade.viavel is not None else (viabilidade.pontuacao >= 0.6),
                 data_analise=viabilidade.data_analise
@@ -366,7 +367,6 @@ async def get_analise_detalhes(
     if analise.cep:
         try:
             cep_limpo = analise.cep.replace("-", "").replace(".", "").strip()
-            # Timeout curto para não travar a resposta se a API cair
             r = requests.get(f"https://cep.awesomeapi.com.br/json/{cep_limpo}", timeout=3)
             
             if r.status_code == 200:
@@ -374,19 +374,16 @@ async def get_analise_detalhes(
                 lat_api = data_api.get("lat")
                 lng_api = data_api.get("lng")
                 
-                # Aproveita para preencher rua/bairro se no banco estiver vazio
                 if not rua_api:
                     rua_api = data_api.get("address")
                 if not bairro_api:
                     bairro_api = data_api.get("district")
                 
-                # Atualiza nome da cidade (para não mostrar código IBGE)
                 if data_api.get("city"):
                     cidade_api = data_api.get("city")
                     
         except Exception as e:
             print(f"Erro ao buscar coordenadas para histórico: {e}")
-            # Se der erro, segue a vida com os dados que tem no banco
         
     local_response = LocalizacaoResponse(
         cep=analise.cep,
