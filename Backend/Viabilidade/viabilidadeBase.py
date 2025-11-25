@@ -29,8 +29,8 @@ class LocalizacaoResponse(BaseModel):
     bairro: Optional[str] = None
     cidade: str
     uf: str
-    latitude: str
-    longitude: str
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None
     
 class DadosViabilidadeResponse(BaseModel):
     viabilidade_id: int
@@ -43,3 +43,20 @@ class ViabilidadeResponse(BaseModel):
     message: str
     data: Optional[DadosViabilidadeResponse] = None
     code: Optional[int] = None
+    
+class HistoricoItem(BaseModel):
+    id: int
+    cnae: str
+    local: str
+    pontuacao: float
+    viavel: bool
+    data_analise: datetime
+
+    class Config:
+        from_attributes = True
+
+class HistoricoResponse(BaseModel):
+    status: str
+    message: str
+    data: List[HistoricoItem]
+    code: int

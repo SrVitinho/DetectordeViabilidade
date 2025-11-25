@@ -8,7 +8,7 @@ import pandas as pd
 
 from database import SessionLocal
 from models import Viabilidade, User, DadosMunic, MicroEmpresasAbertasPorAno, MicroEmpresasFechadasPorAno
-from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse, LocalizacaoResponse
+from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse, LocalizacaoResponse, HistoricoItem, HistoricoResponse
 from ML.loader import predict_viabilidade
 from auth import get_current_user, get_db
 
@@ -279,3 +279,181 @@ async def analisar_viabilidade(
         ),
         code=200
     )
+
+@router.get("/historico", response_model=HistoricoResponse)
+async def get_historico_usuario(
+    user: user_dependency,
+    db: db_dependency,
+):
+    resultados = db.query(Viabilidade, DadosMunic.Nome_Mun).outerjoin(DadosMunic, Viabilidade.cidade == DadosMunic.ID_MUN).filter(Viabilidade.user_id == user.id).order_by(Viabilidade.data_analise.desc()).all()
+        
+    lista_formatada = []
+    
+    for viabilidade, nome_cidade in resultados:
+        
+        partes_endereco = []
+        
+        if viabilidade.rua:
+            partes_endereco.append(viabilidade.rua)
+        
+        if viabilidade.bairro:
+            partes_endereco.append(viabilidade.bairro)
+            
+        cidade_display = nome_cidade if nome_cidade else viabilidade.cidade
+        partes_endereco.append(f"{cidade_display} - {viabilidade.uf}")
+        
+        local_completo = ", ".join(partes_endereco)
+        
+        lista_formatada.append(
+            HistoricoItem(
+                id=viabilidade.id,
+                cnae=viabilidade.cnae,
+                local=local_completo,
+                pontuacao=viabilidade.pontuacao,
+                viavel=viabilidade.viavel if viabilidade.viavel is not None else (viabilidade.pontuacao >= 0.6),
+                data_analise=viabilidade.data_analise
+            )
+        )
+        
+    return HistoricoResponse(
+        status="success",
+        message=f"{len(lista_formatada)} análises encontradas para o usuário {user.name}.",
+        data=lista_formatada,
+        code=200
+    )
+    
+@router.get("/historico/{viabilidade_id}", response_model=ViabilidadeResponse)
+async def get_analise_detalhes(
+    viabilidade_id: int,
+    user: user_dependency,
+    db: db_dependency,
+):
+    analise = db.query(Viabilidade).filter(
+        Viabilidade.id == viabilidade_id,
+        Viabilidade.user_id == user.id
+    ).first()
+    
+    if not analise:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "status": "error",
+                "message": "Análise de viabilidade não encontrada no histórico.",
+                "code": 404
+            }
+        )
+    
+    nome_cidade = str(analise.cidade)
+    if analise.cidade:
+        municipio_obj = db.query(DadosMunic).filter(DadosMunic.ID_MUN == str(analise.cidade)).first()
+        if municipio_obj:
+            nome_cidade = municipio_obj.Nome_Mun
+            
+    try:
+        fatores_lista = json.loads(analise.fatores_risco) if analise.fatores_risco else []
+        recomendacoes_lista = json.loads(analise.recomendacoes) if analise.recomendacoes else []
+    except Exception:
+        fatores_lista = []
+        recomendacoes_lista = []
+        
+        lat_api = None
+    lng_api = None
+    rua_api = getattr(analise, 'rua', None)
+    bairro_api = getattr(analise, 'bairro', None)
+    cidade_api = str(analise.cidade)
+    uf_api = analise.uf
+
+    if analise.cep:
+        try:
+            cep_limpo = analise.cep.replace("-", "").replace(".", "").strip()
+            # Timeout curto para não travar a resposta se a API cair
+            r = requests.get(f"https://cep.awesomeapi.com.br/json/{cep_limpo}", timeout=3)
+            
+            if r.status_code == 200:
+                data_api = r.json()
+                lat_api = data_api.get("lat")
+                lng_api = data_api.get("lng")
+                
+                # Aproveita para preencher rua/bairro se no banco estiver vazio
+                if not rua_api:
+                    rua_api = data_api.get("address")
+                if not bairro_api:
+                    bairro_api = data_api.get("district")
+                
+                # Atualiza nome da cidade (para não mostrar código IBGE)
+                if data_api.get("city"):
+                    cidade_api = data_api.get("city")
+                    
+        except Exception as e:
+            print(f"Erro ao buscar coordenadas para histórico: {e}")
+            # Se der erro, segue a vida com os dados que tem no banco
+        
+    local_response = LocalizacaoResponse(
+        cep=analise.cep,
+        cidade=nome_cidade,
+        uf=analise.uf,
+        rua=getattr(analise, 'rua', None),    
+        bairro=getattr(analise, 'bairro', None), 
+        latitude=lat_api, 
+        longitude=lng_api 
+    )
+    
+    return ViabilidadeResponse(
+        status="success",
+        message="Detalhes recuperados.",
+        data=DadosViabilidadeResponse(
+            viabilidade_id=analise.id,
+            data_analise=analise.data_analise,
+            localizacao=local_response,
+            resultado=ResultadoViabilidade(
+                pontuacao=analise.pontuacao,
+                detalhes=DetalhesResultado(
+                    analise_localizacao=int(analise.cep.replace("-","").replace(".","")) if analise.cep else 0
+                )
+            )
+        ),
+        code=200
+    )
+    
+@router.delete("/historico/{viabilidade_id}", response_model=ViabilidadeResponse)
+async def deletar_analise(
+    viabilidade_id: int,
+    user: user_dependency,
+    db: db_dependency
+):
+    analise_para_deletar = db.query(Viabilidade).filter(
+        Viabilidade.id == viabilidade_id,
+        Viabilidade.user_id == user.id
+    ).first()
+
+    if not analise_para_deletar:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "status": "error",
+                "message": "Análise não encontrada ou você não tem permissão para excluí-la.",
+                "code": 404
+            }
+        )
+
+    try:
+        db.delete(analise_para_deletar)
+        db.commit()
+
+        return ViabilidadeResponse(
+            status="success",
+            message=f"Análise {viabilidade_id} excluída com sucesso.",
+            data=None,
+            code=200
+        )
+
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "status": "error",
+                "message": f"Erro ao tentar excluir: {str(e)}",
+                "code": 500
+            }
+        )
