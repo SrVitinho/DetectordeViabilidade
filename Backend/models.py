@@ -31,12 +31,15 @@ class Viabilidade(Base):
     uf = Column(String(2))
     rua = Column(String)
     bairro = Column(String)
-    capital_inicial = Column(Float)
-    viavel = Column(Boolean)
     
+    capital_inicial = Column(Float)
     cnae = Column(String(20))
     is_mei = Column(Boolean)
     
+    natureza_juridica = Column(Integer)
+    qualificacao_responsavel = Column(Integer)
+    
+    viavel = Column(Boolean)
     pontuacao = Column(Float)
     
     analise_localizacao = Column(String)

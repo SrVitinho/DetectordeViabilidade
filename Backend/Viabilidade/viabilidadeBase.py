@@ -36,6 +36,7 @@ class DadosViabilidadeResponse(BaseModel):
     viabilidade_id: int
     resultado: ResultadoViabilidade
     localizacao: LocalizacaoResponse
+    empresa: EmpresaBase
     data_analise: datetime
     
 class ViabilidadeResponse(BaseModel):

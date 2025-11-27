@@ -8,7 +8,7 @@ import pandas as pd
 
 from database import SessionLocal
 from models import Viabilidade, User, DadosMunic, MicroEmpresasAbertasPorAno, MicroEmpresasFechadasPorAno
-from  Viabilidade.viabilidadeBase import ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse, LocalizacaoResponse, HistoricoItem, HistoricoResponse
+from  Viabilidade.viabilidadeBase import EmpresaBase, ViabilidadeRequest, ViabilidadeResponse, DetalhesResultado, ResultadoViabilidade, DadosViabilidadeResponse, LocalizacaoResponse, HistoricoItem, HistoricoResponse
 from ML.loader import predict_viabilidade
 from auth import get_current_user, get_db
 
@@ -235,18 +235,22 @@ async def analisar_viabilidade(
         uf=municObservado.UF,
         rua=dados_endereco.get("rua"),
         bairro=dados_endereco.get("bairro"),
-        capital_inicial=dados.empresa.capitalInicial,
         viavel=e_viavel,
+        
+        cnae=dados.empresa.cnae,
+        is_mei=dados.empresa.isMei,
+        pontuacao=score_calculado,
+        
+        capital_inicial=dados.empresa.capitalInicial,
+        natureza_juridica=dados.empresa.naturezaJuridica,
+        qualificacao_responsavel=dados.empresa.qualificacaoDoResponsavel,
         
         analise_localizacao=f"Análise para o CEP {cep_filtrado}", 
         analise_mercado="Análise pendente...",
         analise_economica="Análise pendente...",
         fatores_risco="[]",
-        recomendacoes="[]",
+        recomendacoes="[]"
         
-        cnae=dados.empresa.cnae,
-        is_mei=dados.empresa.isMei,
-        pontuacao=score_calculado
     )
 
     db.add(nova_analise)
@@ -269,7 +273,13 @@ async def analisar_viabilidade(
                 latitude=dados_endereco["lat"],
                 longitude=dados_endereco["lng"]
             ),
-            
+            empresa=EmpresaBase(
+                cnae=str(dados.empresa.cnae),
+                naturezaJuridica=dados.empresa.naturezaJuridica,
+                qualificacaoDoResponsavel=dados.empresa.qualificacaoDoResponsavel,
+                capitalInicial=dados.empresa.capitalInicial,
+                isMei=dados.empresa.isMei
+            ),
             resultado=ResultadoViabilidade(
                 pontuacao=nova_analise.pontuacao,
                 detalhes=DetalhesResultado(
@@ -393,7 +403,7 @@ async def get_analise_detalhes(
         rua=getattr(analise, 'rua', None),    
         bairro=getattr(analise, 'bairro', None), 
         latitude=lat_api, 
-        longitude=lng_api 
+        longitude=lng_api   
     )
     
     return ViabilidadeResponse(
@@ -403,6 +413,15 @@ async def get_analise_detalhes(
             viabilidade_id=analise.id,
             data_analise=analise.data_analise,
             localizacao=local_response,
+            
+            empresa=EmpresaBase(
+                cnae=analise.cnae,
+                naturezaJuridica=analise.natureza_juridica if analise.natureza_juridica else 0,
+                qualificacaoDoResponsavel=analise.qualificacao_responsavel if analise.qualificacao_responsavel else 0,
+                capitalInicial=analise.capital_inicial if analise.capital_inicial else 0.0,
+                isMei=analise.is_mei
+            ),
+            
             resultado=ResultadoViabilidade(
                 pontuacao=analise.pontuacao,
                 detalhes=DetalhesResultado(
