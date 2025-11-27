@@ -319,7 +319,7 @@ async def get_historico_usuario(
                 id=viabilidade.id,
                 cnae=viabilidade.cnae,
                 local=local_completo,
-                cep=viabilidade.cep,
+                cep=str(viabilidade.cep),
                 pontuacao=viabilidade.pontuacao,
                 viavel=viabilidade.viavel if viabilidade.viavel is not None else (viabilidade.pontuacao >= 0.6),
                 data_analise=viabilidade.data_analise
