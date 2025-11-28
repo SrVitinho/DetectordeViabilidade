@@ -29,11 +29,24 @@ class Viabilidade(Base):
     cep = Column(Integer)
     cidade = Column(Integer)
     uf = Column(String(2))
+    rua = Column(String)
+    bairro = Column(String)
     
+    capital_inicial = Column(Float)
     cnae = Column(String(20))
     is_mei = Column(Boolean)
     
+    natureza_juridica = Column(Integer)
+    qualificacao_responsavel = Column(Integer)
+    
+    viavel = Column(Boolean)
     pontuacao = Column(Float)
+    
+    analise_localizacao = Column(String)
+    analise_mercado = Column(String)
+    analise_economica = Column(String)
+    fatores_risco = Column(String) 
+    recomendacoes = Column(String)
     
     data_analise = Column(
         DateTime(timezone=True), 
@@ -91,7 +104,7 @@ class DadosMunic(Base):
     POP_22 = Column(Integer, nullable=True)
 
 class MicroEmpresasFechadasPorAno(Base):
-    __tablename__ = "MICROEMPRESASFECHADASSPORANO"
+    __tablename__ = "MICROEMPRESASFECHADASPORANO"
 
     EmpresasSimilaresFechadas = Column(Integer, nullable=False)
     ANOBAIXA = Column(Integer, nullable=False, primary_key=True, index=True)
