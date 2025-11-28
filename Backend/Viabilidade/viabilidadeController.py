@@ -377,7 +377,7 @@ async def get_analise_detalhes(
 
     if analise.cep:
         try:
-            cep_limpo = analise.cep.replace("-", "").replace(".", "").strip()
+            cep_limpo = str(analise.cep).replace("-", "").replace(".", "").strip()
             r = requests.get(f"https://cep.awesomeapi.com.br/json/{cep_limpo}", timeout=3)
             
             if r.status_code == 200:
@@ -397,7 +397,7 @@ async def get_analise_detalhes(
             print(f"Erro ao buscar coordenadas para histórico: {e}")
         
     local_response = LocalizacaoResponse(
-        cep=analise.cep,
+        cep=str(analise.cep),
         cidade=nome_cidade,
         uf=analise.uf,
         rua=getattr(analise, 'rua', None),    
@@ -425,7 +425,7 @@ async def get_analise_detalhes(
             resultado=ResultadoViabilidade(
                 pontuacao=analise.pontuacao,
                 detalhes=DetalhesResultado(
-                    analise_localizacao=int(analise.cep.replace("-","").replace(".","")) if analise.cep else 0
+                    analise_localizacao=int(str(analise.cep).replace("-","").replace(".","")) if analise.cep else 0
                 )
             )
         ),
