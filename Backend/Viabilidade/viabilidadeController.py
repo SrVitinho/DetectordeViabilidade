@@ -377,7 +377,7 @@ async def get_analise_detalhes(
 
     if analise.cep:
         try:
-            cep_limpo = str(analise.cep).replace("-", "").replace(".", "").strip()
+            cep_limpo = str(analise.cep).replace("-", "").replace(".", "").replace("\"", "").strip()
             r = requests.get(f"https://cep.awesomeapi.com.br/json/{cep_limpo}", timeout=3)
             
             if r.status_code == 200:

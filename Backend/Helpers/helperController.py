@@ -147,7 +147,7 @@ NATUREZA_JURIDICA = [
 @lru_cache(maxsize=1)
 def fetch_ibge_cnaes():
     try:
-        response = requests.get("https://servicodados.ibge.gov.br/api/v2/cnae/classes")
+        response = requests.get("https://servicodados.ibge.gov.br/api/v2/cnae/subclasses")
         response.raise_for_status()
         data = response.json()
         
